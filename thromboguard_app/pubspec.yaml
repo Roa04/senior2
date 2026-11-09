@@ -1,0 +1,35 @@
+name: thromboguard
+description: ThromboGuard – Smart Cardiac Monitoring Wristband Companion App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  firebase_core: ^3.3.0
+  firebase_auth: ^5.1.4
+  cloud_firestore: ^5.2.1
+  geolocator: ^13.0.0       # GPS for emergency alerts
+  url_launcher: ^6.3.0      # opens SMS app / dialer
+  flutter_blue_plus: ^1.35.5  # BLE connection to the ESP32 wristband
+  http: ^1.2.2              # calls the AI server
+
+  # --- Real hardware / cloud integrations (documented as TODO in code) ---
+  # flutter_blue_plus: ^1.32.10      # BLE connection to the ESP32 wristband
+  # firebase_core: ^3.3.0
+  # firebase_auth: ^5.1.4
+  # cloud_firestore: ^5.2.1
+  # dio: ^5.4.0                       # HTTPS calls to your PTB-XL-trained
+  #                                    # classifier endpoint on the cloud
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

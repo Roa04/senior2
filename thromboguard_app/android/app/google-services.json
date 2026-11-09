@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "518392206873",
+    "project_id": "seniorapp1",
+    "storage_bucket": "seniorapp1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:518392206873:android:3a6b4ad3185e173509bc88",
+        "android_client_info": {
+          "package_name": "com.example.thromboguard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_bEojmvfDZ_c35GZ4uV_28ZygneNpkiM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
