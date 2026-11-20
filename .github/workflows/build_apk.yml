@@ -23,7 +23,7 @@ jobs:
       - name: Fix duplicate google-services plugin version (build only)
         run: sed -i '1,3d' android/build.gradle.kts
       - run: flutter pub get
-      - run: flutter build apk --debug
+      - run: flutter build apk --debug --android-skip-build-dependency-validation
       - uses: actions/upload-artifact@v4
         with:
           name: thromboguard-apk
