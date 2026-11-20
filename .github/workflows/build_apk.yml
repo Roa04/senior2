@@ -1,0 +1,28 @@
+name: Build APK
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: thromboguard_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Set server address (build only)
+        run: sed -i "s|http://192.168.1.10:8000|http://192.168.1.115:8000|" lib/config.dart
+      - name: Allow http to the local server (build only)
+        run: sed -i 's|<application|<application android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
+      - run: flutter pub get
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thromboguard-apk
+          path: thromboguard_app/build/app/outputs/flutter-apk/app-debug.apk
