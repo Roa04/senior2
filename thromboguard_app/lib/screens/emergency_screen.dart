@@ -10,7 +10,7 @@ enum _Phase { counting, sending, done }
 
 /// Full-screen alert shown on a Critical reading.
 /// Countdown -> if the user does not press "I'M OK": SMS to ALL emergency
-/// contacts (with location + vitals), then a call to the FIRST contact.
+/// contacts (with location + vitals). No phone call is placed (team decision).
 class EmergencyScreen extends StatefulWidget {
   final PatientProfile profile;
   final VitalReading reading;
@@ -69,7 +69,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       profile: widget.profile,
       reading: widget.reading,
       critical: true,
-      placeCall: true,
+      placeCall: false, // team decision: SMS only, no automatic phone call
     );
     UserDataService.saveEmergency({
       ..._eventData(_outcome(res)),
@@ -127,7 +127,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
           child: Text('$_left',
               style: const TextStyle(color: Colors.white, fontSize: 96, fontWeight: FontWeight.bold)),
         ),
-        const Text('Your emergency contacts will be messaged and called automatically.',
+        const Text('Your emergency contacts will be messaged automatically.',
             textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
         const SizedBox(height: 28),
         ElevatedButton(

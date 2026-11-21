@@ -8,6 +8,8 @@ import '../screens/history_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/emergency_screen.dart';
 import '../config.dart';
+import '../services/advice_service.dart';
+import '../services/server_test_source.dart';
 import '../services/ble_reading_source.dart';
 import '../services/emergency_service.dart';
 import '../services/ptbxl_service.dart';
@@ -50,7 +52,11 @@ class _BottomNavShellState extends State<BottomNavShell> {
     super.initState();
     _profile = widget.profile;
     _service = widget.source ??
-        (kUseSimulator ? PtbxlService() : BleReadingSource(profile: () => _profile));
+        (kUseSimulator
+            ? (kSimulatorCallsServer
+                ? ServerTestSource(profile: () => _profile)
+                : PtbxlService())
+            : BleReadingSource(profile: () => _profile));
     _loadHistory();
     WidgetsBinding.instance.addPostFrameCallback((_) => _askPermissions());
     _sub = _service.readings.listen(_onReading);
@@ -84,21 +90,28 @@ class _BottomNavShellState extends State<BottomNavShell> {
     await EmergencyService.requestAllPermissions();
   }
 
-  /// Abnormal (not critical): SMS to the family only, at most once per 30 min.
+  /// Abnormal (medium): NO SMS. The user gets safety advice (AI via the server, or a fixed text offline),
+  /// at most once per 30 min.
   Future<void> _maybeAlertAbnormal(VitalReading r) async {
     if (_emergencyActive || DateTime.now().difference(_lastAbnormalAlert) < _abnormalCooldown) return;
     _lastAbnormalAlert = DateTime.now();
-    final res = await EmergencyService.runAlert(
-        profile: _profile, reading: r, critical: false, placeCall: false);
+    final advice = await AdviceService.get(reading: r, profile: _profile);
     UserDataService.saveEmergency({
-      'outcome': res.dryRun ? 'abnormal_dry_run' : (res.smsSent > 0 ? 'abnormal_sms_sent' : 'abnormal_failed'),
+      'outcome': advice.fromServer ? 'abnormal_advice_server' : 'abnormal_advice_offline',
       'heartRate': r.heartRate,
       'spo2': r.spo2,
       'ecgRisk': r.risk.name,
       'readingTimestamp': r.timestamp.millisecondsSinceEpoch,
     });
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Abnormal reading. ${res.summary}')));
+    if (!mounted || _emergencyActive) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تنبيه: قراءة غير اعتيادية', textDirection: TextDirection.rtl),
+        content: SingleChildScrollView(child: Text(advice.text, textDirection: TextDirection.rtl)),
+        actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('حسناً'))],
+      ),
+    );
   }
 
   Future<void> _maybeStartEmergency(VitalReading r) async {
@@ -191,7 +204,7 @@ class _BottomNavShellState extends State<BottomNavShell> {
   }
 }
 
-/// Wristband / server status strip (FR-02: "Device Disconnected").
+/// Device / server status strip (FR-02: "Device Disconnected").
 class _BleBanner extends StatelessWidget {
   final BleReadingSource source;
   const _BleBanner({required this.source});
@@ -207,12 +220,12 @@ class _BleBanner extends StatelessWidget {
           Color color = Colors.orange;
           switch (s) {
             case BleStatus.bluetoothOff:
-              text = 'Bluetooth is off. Turn it on to connect the wristband.';
+              text = 'Bluetooth is off. Turn it on to connect the device.';
               color = Colors.red;
             case BleStatus.scanning:
-              text = 'Searching for the wristband...';
+              text = 'Searching for the device...';
             case BleStatus.connecting:
-              text = 'Connecting to the wristband...';
+              text = 'Connecting to the device...';
             case BleStatus.disconnected:
               text = 'Device Disconnected. Reconnecting...';
               color = Colors.red;

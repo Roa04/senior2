@@ -12,12 +12,16 @@ const bool kEmergencyDryRun = true;
 const int kCountdownSeconds = 10;
 
 // ---------------------------------------------------------------------
-// Data source: simulator now, real wristband + cloud AI later.
+// Data source: simulator now, real chest device + cloud AI later.
 // ---------------------------------------------------------------------
 
-/// true  = random simulated readings (no wristband, no server needed).
-/// false = real wristband over Bluetooth + cloud AI server.
+/// true  = random simulated readings (no device, no server needed).
+/// false = real chest device over Bluetooth + cloud AI server.
 const bool kUseSimulator = true;
+
+/// Only used while kUseSimulator = true. true = the app sends a synthetic ECG
+/// to the real server (tests the app -> server link, no device needed).
+const bool kSimulatorCallsServer = true;
 
 /// Address of the FastAPI server (thromboguard_server). While testing on
 /// your laptop use its Wi-Fi IP (run `ipconfig`), NOT localhost: the phone
@@ -25,7 +29,7 @@ const bool kUseSimulator = true;
 /// the same Wi-Fi. Later replace with the cloud URL (https://...).
 const String kApiBaseUrl = 'http://192.168.1.10:8000';
 
-/// Wristband BLE contract. See BLE_CONTRACT.md. The ESP32 must use the
+/// Device BLE contract. See BLE_CONTRACT.md. The ESP32 must use the
 /// same name and UUIDs.
 const String kBleDeviceName = 'ThromboGuard';
 const String kBleServiceUuid = '7a1c0001-5b6e-4f5a-9c1d-0a0b0c0d0e0f';
