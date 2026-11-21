@@ -8,7 +8,7 @@ import 'reading_source.dart';
 
 enum BleStatus { bluetoothOff, scanning, connecting, connected, disconnected }
 
-/// Real data source: connects to the ESP32 wristband over BLE, buffers the
+/// Real data source: connects to the ESP32 chest device over BLE, buffers the
 /// ECG, sends it to the cloud AI every [kAnalyzeEverySeconds] and emits a
 /// VitalReading. Reconnects automatically (FR-02 / NFR-02).
 ///
@@ -107,7 +107,7 @@ class BleReadingSource implements ReadingSource {
           if (s == BluetoothConnectionState.disconnected && !lost.isCompleted) lost.complete();
         });
         _setStatus(BleStatus.connected);
-        await lost.future; // stays here until the wristband disconnects
+        await lost.future; // stays here until the device disconnects
       } catch (e) {
         debugPrint('BLE error: $e');
       }
@@ -147,20 +147,24 @@ class BleReadingSource implements ReadingSource {
   Future<void> _analyze() async {
     if (_analyzing || !_running) return;
     if (status.value != BleStatus.connected) return;
-    if (_hr <= 0 || _fingerOff) return; // no valid measurement yet
+    // NOTE: the ECG is analysed even when the PPG has no valid reading; the server treats HR/SpO2 = 0 as "missing".
     if (_ecg.length < kEcgSampleRate * 5) return; // need >= 5 s
     _analyzing = true;
     try {
       final window = List<double>.from(_ecg);
       final res = await CloudApi.analyze(
         ecg: window,
-        heartRate: _hr,
+        heartRate: _fingerOff ? 0 : _hr,
+        spo2: _fingerOff ? 0 : _spo2,
         fallDetected: _fall,
         profile: profile(),
       );
       cloudError.value = null;
       if (_controller.isClosed) return;
       _controller.add(_toReading(res, window));
+    } on CloudSignalException catch (e) {
+      cloudError.value = '${e.message}. Check the electrodes and stay still.';
+      debugPrint('Signal problem: $e');
     } catch (e) {
       cloudError.value = 'AI server unreachable. Check Wi-Fi and server.';
       debugPrint('Cloud error: $e');
