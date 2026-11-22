@@ -22,7 +22,7 @@ class AdviceService {
       'أعد القياس بعد بضع دقائق وأنت ساكن.';
 
   static Future<Advice> get({required VitalReading reading, required PatientProfile profile}) async {
-    if (!kUseSimulator) {
+    if (!kUseSimulator || kSimulatorCallsServer) {
       try {
         final t = await CloudApi.advice(heartRate: reading.heartRate, spo2: reading.spo2, profile: profile);
         if (t.trim().isNotEmpty) return Advice(t, true);
