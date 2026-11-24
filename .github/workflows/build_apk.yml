@@ -17,7 +17,7 @@ jobs:
         with:
           channel: stable
       - name: Set server address (build only)
-        run: sed -i "s|http://192.168.1.10:8000|http://192.168.1.115:8000|" lib/config.dart
+        run: sed -i "s|http://192.168.1.10:8000|http://192.168.1.107:8000|" lib/config.dart
       - name: Allow http to the local server (build only)
         run: sed -i 's|<application|<application android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
       - name: Fix duplicate google-services plugin version (build only)
